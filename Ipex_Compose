@@ -1,0 +1,34 @@
+                                                                                                        
+services:
+  inference:
+    image: intelanalytics/ipex-llm-inference-cpp-xpu:latest  # Docker image you want to use
+    container_name: ipex-llm-inference-cpp-xpu-container  # Name of the container
+    command: >
+      bash -c "
+        # Source necessary environment files
+        source /etc/profile &&
+        source ~/.bashrc && 
+        cd /llm/scripts/ &&
+        source ipex-llm-init --gpu --device iGPU &&
+        bash start-ollama.sh && 
+        tail -f /dev/null
+      "
+
+
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - no_proxy=localhost,127.0.0.1
+      - DEVICE=iGPU
+    volumes:
+      - /home/manager/ollama/models:/models  # Bind mount model directory
+    devices:
+      - /dev/dri  # For device access (GPU/Accelerator)
+    shm_size: 24g  # Shared memory size
+    privileged: true  # Grant privileged access for GPU
+    network_mode: host  # Use the host's networking stack
+    mem_limit: 32g  # Set the memory limit
+    stdin_open: true  # Keep stdin open
+    tty: true  # Enable TTY (interactive terminal)
+    restart: always  # Automatically restart on failure (optional)
